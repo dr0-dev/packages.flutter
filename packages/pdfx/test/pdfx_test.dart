@@ -1,4 +1,3 @@
-// ignore: unnecessary_import
 import 'dart:typed_data';
 
 import 'package:flutter/foundation.dart' show kIsWeb;
@@ -18,10 +17,10 @@ void main() {
   PdfxPlatform.instance = PdfxPlatformMethodChannel();
   final List<MethodCall> log = <MethodCall>[];
   PdfDocument? document;
-  late Uint8List testData;
+  late Uint8List _testData;
 
   setUpAll(() async {
-    testData = Uint8List.fromList(imageBytes);
+    _testData = Uint8List.fromList(imageBytes);
 
     const MethodChannel('io.scer.pdf_renderer')
         .setMockMethodCallHandler((MethodCall methodCall) async {
@@ -57,7 +56,7 @@ void main() {
             'width': methodCall.arguments['width'],
             'height': methodCall.arguments['height'],
             'path': 'test/image.png',
-            'data': testData,
+            'data': _testData,
           };
         default:
           return null;
@@ -100,11 +99,11 @@ void main() {
     });
 
     test('from data', () async {
-      document = await PdfDocument.openData(testData);
+      document = await PdfDocument.openData(_testData);
       expect(log, <Matcher>[
         isMethodCall(
           'open.document.data',
-          arguments: testData,
+          arguments: _testData,
         ),
       ]);
       expect(document!.pagesCount, 3);
@@ -173,7 +172,7 @@ void main() {
         ),
       ]);
 
-      expect(pageImage.bytes, testData);
+      expect(pageImage.bytes, _testData);
       expect(pageImage.format, PdfPageImageFormat.jpeg);
       expect(pageImage.width, width);
       expect(pageImage.height, height);

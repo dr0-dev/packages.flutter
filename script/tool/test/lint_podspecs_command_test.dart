@@ -65,7 +65,7 @@ void main() {
     });
 
     test('runs pod lib lint on a podspec', () async {
-      final RepositoryPackage plugin = createFakePlugin(
+      final Directory plugin1Dir = createFakePlugin(
         'plugin1',
         packagesDir,
         extraFiles: <String>[
@@ -91,8 +91,8 @@ void main() {
               <String>[
                 'lib',
                 'lint',
-                plugin
-                    .platformDirectory(FlutterPlatform.ios)
+                plugin1Dir
+                    .childDirectory('ios')
                     .childFile('plugin1.podspec')
                     .path,
                 '--configuration=Debug',
@@ -106,8 +106,8 @@ void main() {
               <String>[
                 'lib',
                 'lint',
-                plugin
-                    .platformDirectory(FlutterPlatform.ios)
+                plugin1Dir
+                    .childDirectory('ios')
                     .childFile('plugin1.podspec')
                     .path,
                 '--configuration=Debug',
@@ -121,6 +121,48 @@ void main() {
       expect(output, contains('Linting plugin1.podspec'));
       expect(output, contains('Foo'));
       expect(output, contains('Bar'));
+    });
+
+    test('allow warnings for podspecs with known warnings', () async {
+      final Directory plugin1Dir = createFakePlugin('plugin1', packagesDir,
+          extraFiles: <String>['plugin1.podspec']);
+
+      final List<String> output = await runCapturingPrint(
+          runner, <String>['podspecs', '--ignore-warnings=plugin1']);
+
+      expect(
+        processRunner.recordedCalls,
+        orderedEquals(<ProcessCall>[
+          ProcessCall('which', const <String>['pod'], packagesDir.path),
+          ProcessCall(
+              'pod',
+              <String>[
+                'lib',
+                'lint',
+                plugin1Dir.childFile('plugin1.podspec').path,
+                '--configuration=Debug',
+                '--skip-tests',
+                '--use-modular-headers',
+                '--allow-warnings',
+                '--use-libraries'
+              ],
+              packagesDir.path),
+          ProcessCall(
+              'pod',
+              <String>[
+                'lib',
+                'lint',
+                plugin1Dir.childFile('plugin1.podspec').path,
+                '--configuration=Debug',
+                '--skip-tests',
+                '--use-modular-headers',
+                '--allow-warnings',
+              ],
+              packagesDir.path),
+        ]),
+      );
+
+      expect(output, contains('Linting plugin1.podspec'));
     });
 
     test('fails if pod is missing', () async {

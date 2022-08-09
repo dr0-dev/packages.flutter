@@ -1,15 +1,3 @@
-## 2.2.0
-
-* Upgrade dependency `device_info_plus` to v4
-* Fixed flutter 3.0 build
-* Fixed web install script 
-* Fixed some bugs
-
-## 2.1.0
-
-* Update `[photo_view]` dependency to 0.14.0 [](https://github.com/ScerIO/packages.flutter/pull/306)
-* Fixed render crop [pull#35](https://github.com/ScerIO/packages.flutter/pull/305)
-
 ## 2.0.1+2
 
 * Fixed broken links at pub.dev

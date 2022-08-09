@@ -1,6 +1,9 @@
 {
   "folders": [
     {
+      "path": "native_pdf_renderer"
+    },
+    {
       "path": "auto_animated"
     },
     {
@@ -13,10 +16,10 @@
       "path": "flutter_color"
     },
     {
-      "path": "pdfx"
+      "path": "native_pdf_view"
     },
     {
-      "path": ".."
+      "path": "pdfx"
     }
   ],
   "settings": {

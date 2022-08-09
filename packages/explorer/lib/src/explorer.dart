@@ -37,7 +37,7 @@ class Explorer extends StatefulWidget {
   final void Function(ExplorerFile)? filePressed;
 
   @override
-  State<Explorer> createState() => _ExplorerState();
+  _ExplorerState createState() => _ExplorerState();
 }
 
 class _ExplorerState extends State<Explorer>
@@ -81,7 +81,7 @@ class _ExplorerState extends State<Explorer>
                 onRefresh: widget.controller.refresh,
                 child: CustomScrollView(
                   controller: _scrollController,
-                  physics: const AlwaysScrollableScrollPhysics(),
+                  physics: AlwaysScrollableScrollPhysics(),
                   slivers: widget.builder(context),
                 ),
               ),

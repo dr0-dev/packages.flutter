@@ -49,7 +49,7 @@ class EpubView extends StatefulWidget {
   final EpubViewBuilders builders;
 
   @override
-  State<EpubView> createState() => _EpubViewState();
+  _EpubViewState createState() => _EpubViewState();
 }
 
 class _EpubViewState extends State<EpubView> {

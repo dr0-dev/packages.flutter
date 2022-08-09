@@ -10,10 +10,8 @@ import 'package:sliver_tools/sliver_tools.dart';
 import 'entry.dart';
 
 class ExplorerFilesGridView extends StatefulWidget {
-  const ExplorerFilesGridView({Key? key}) : super(key: key);
-
   @override
-  State<ExplorerFilesGridView> createState() => _ExplorerFilesGridViewState();
+  _ExplorerFilesGridViewState createState() => _ExplorerFilesGridViewState();
 }
 
 class _ExplorerFilesGridViewState extends State<ExplorerFilesGridView> {
@@ -45,41 +43,41 @@ class _ExplorerFilesGridViewState extends State<ExplorerFilesGridView> {
           value: 'open',
           child: Row(
             children: <Widget>[
-              const Icon(Icons.launch),
-              const SizedBox(width: 16),
+              Icon(Icons.launch),
+              SizedBox(width: 16),
               Text(i18n.actionMenuOpen),
             ],
           ),
         ),
-        const PopupMenuDivider(),
+        PopupMenuDivider(),
         PopupMenuItem(
           value: 'copy',
           child: Row(
             children: <Widget>[
-              const Icon(Icons.content_copy),
-              const SizedBox(width: 16),
+              Icon(Icons.content_copy),
+              SizedBox(width: 16),
               Text(i18n.actionMenuCopy),
             ],
           ),
         ),
-        const PopupMenuDivider(),
+        PopupMenuDivider(),
         PopupMenuItem(
           value: 'cut',
           child: Row(
             children: <Widget>[
-              const Icon(Icons.content_cut),
-              const SizedBox(width: 16),
+              Icon(Icons.content_cut),
+              SizedBox(width: 16),
               Text(i18n.actionMenuCut),
             ],
           ),
         ),
-        const PopupMenuDivider(),
+        PopupMenuDivider(),
         PopupMenuItem(
           value: 'delete',
           child: Row(
             children: <Widget>[
-              const Icon(Icons.delete),
-              const SizedBox(width: 16),
+              Icon(Icons.delete),
+              SizedBox(width: 16),
               Text(i18n.actionMenuDelete),
             ],
           ),
@@ -127,8 +125,8 @@ class _ExplorerFilesGridViewState extends State<ExplorerFilesGridView> {
               ),
             LiveSliverGrid(
               controller: ControllerProvider.of(context)!.scrollController!,
-              showItemInterval: const Duration(milliseconds: 25),
-              showItemDuration: const Duration(milliseconds: 125),
+              showItemInterval: Duration(milliseconds: 25),
+              showItemDuration: Duration(milliseconds: 125),
               itemCount: entries.length,
               itemBuilder: (BuildContext context, int index, animation) {
                 final entry = entries[index];
@@ -140,7 +138,7 @@ class _ExplorerFilesGridViewState extends State<ExplorerFilesGridView> {
                   ).animate(animation),
                   child: SlideTransition(
                     position: Tween<Offset>(
-                      begin: const Offset(0, -0.025),
+                      begin: Offset(0, -0.025),
                       end: Offset.zero,
                     ).animate(animation),
                     child: EntryExplorer(

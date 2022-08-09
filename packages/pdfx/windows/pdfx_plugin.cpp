@@ -263,7 +263,8 @@ void PdfxPlugin::HandleMethodCall(
         format = PNG;
         break;
       default:
-        result->Error("pdfx_exception", "Image encoder not implemented");
+        result->Error("pdfx_exception",
+                      "Image encoder not implemented");
         return;
     }
 

@@ -12,7 +12,7 @@ import 'mocks.dart';
 import 'util.dart';
 
 void main() {
-  group('ListCommand', () {
+  group('$ListCommand', () {
     late FileSystem fileSystem;
     late MockPlatform mockPlatform;
     late Directory packagesDir;
@@ -101,18 +101,15 @@ void main() {
           '/packages/plugin1/pubspec.yaml',
           '/packages/plugin1/AUTHORS',
           '/packages/plugin1/CHANGELOG.md',
-          '/packages/plugin1/README.md',
           '/packages/plugin1/example/pubspec.yaml',
           '/packages/plugin2/pubspec.yaml',
           '/packages/plugin2/AUTHORS',
           '/packages/plugin2/CHANGELOG.md',
-          '/packages/plugin2/README.md',
           '/packages/plugin2/example/example1/pubspec.yaml',
           '/packages/plugin2/example/example2/pubspec.yaml',
           '/packages/plugin3/pubspec.yaml',
           '/packages/plugin3/AUTHORS',
           '/packages/plugin3/CHANGELOG.md',
-          '/packages/plugin3/README.md',
         ]),
       );
     });
@@ -122,11 +119,17 @@ void main() {
 
       // Create a federated plugin by creating a directory under the packages
       // directory with several packages underneath.
-      final Directory federatedPluginDir =
-          packagesDir.childDirectory('my_plugin')..createSync();
-      createFakePlugin('my_plugin', federatedPluginDir);
-      createFakePlugin('my_plugin_web', federatedPluginDir);
-      createFakePlugin('my_plugin_macos', federatedPluginDir);
+      final Directory federatedPlugin = packagesDir.childDirectory('my_plugin')
+        ..createSync();
+      final Directory clientLibrary =
+          federatedPlugin.childDirectory('my_plugin')..createSync();
+      createFakePubspec(clientLibrary);
+      final Directory webLibrary =
+          federatedPlugin.childDirectory('my_plugin_web')..createSync();
+      createFakePubspec(webLibrary);
+      final Directory macLibrary =
+          federatedPlugin.childDirectory('my_plugin_macos')..createSync();
+      createFakePubspec(macLibrary);
 
       // Test without specifying `--type`.
       final List<String> plugins =
@@ -148,11 +151,17 @@ void main() {
 
       // Create a federated plugin by creating a directory under the packages
       // directory with several packages underneath.
-      final Directory federatedPluginDir =
-          packagesDir.childDirectory('my_plugin')..createSync();
-      createFakePlugin('my_plugin', federatedPluginDir);
-      createFakePlugin('my_plugin_web', federatedPluginDir);
-      createFakePlugin('my_plugin_macos', federatedPluginDir);
+      final Directory federatedPlugin = packagesDir.childDirectory('my_plugin')
+        ..createSync();
+      final Directory clientLibrary =
+          federatedPlugin.childDirectory('my_plugin')..createSync();
+      createFakePubspec(clientLibrary);
+      final Directory webLibrary =
+          federatedPlugin.childDirectory('my_plugin_web')..createSync();
+      createFakePubspec(webLibrary);
+      final Directory macLibrary =
+          federatedPlugin.childDirectory('my_plugin_macos')..createSync();
+      createFakePubspec(macLibrary);
 
       List<String> plugins = await runCapturingPrint(
           runner, <String>['list', '--packages=plugin1']);

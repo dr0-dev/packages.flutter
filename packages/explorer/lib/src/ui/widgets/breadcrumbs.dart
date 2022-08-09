@@ -8,10 +8,8 @@ import 'package:flutter_breadcrumb/flutter_breadcrumb.dart';
 
 /// Location (path) breadcrumbs view for explorer builder
 class ExplorerBreadCrumbs extends StatefulWidget {
-  const ExplorerBreadCrumbs({Key? key}) : super(key: key);
-
   @override
-  State<ExplorerBreadCrumbs> createState() => _ExplorerBreadCrumbsState();
+  _ExplorerBreadCrumbsState createState() => _ExplorerBreadCrumbsState();
 }
 
 class _ExplorerBreadCrumbsState extends State<ExplorerBreadCrumbs>
@@ -28,7 +26,7 @@ class _ExplorerBreadCrumbsState extends State<ExplorerBreadCrumbs>
 
     _animationController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 300),
+      duration: Duration(milliseconds: 300),
     );
 
     _subscription = _controller.stream.listen((state) {
@@ -62,25 +60,26 @@ class _ExplorerBreadCrumbsState extends State<ExplorerBreadCrumbs>
       initialData: _initialData,
       stream: _controller.stream,
       builder: (_, snapshot) {
-        WidgetsBinding.instance.addPostFrameCallback((_) {
+        WidgetsBinding.instance!.addPostFrameCallback((_) {
           if (_scrollController!.hasClients) {
             _scrollController!
                 .jumpTo(_scrollController!.position.maxScrollExtent);
           }
         });
 
-        return BreadCrumb(
-          overflow: ScrollableOverflow(controller: _scrollController),
-          items: <BreadCrumbItem>[
-            for (final crumb in _controller.breadCrumbs)
-              BreadCrumbItem(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
-                content: Text(crumb.name, style: theme.textTheme.bodyText1),
-                onTap: () => _controller.go(crumb.path),
-              ),
-          ],
-          divider: const Icon(Icons.chevron_right),
+        return Container(
+          child: BreadCrumb(
+            overflow: ScrollableOverflow(controller: _scrollController),
+            items: <BreadCrumbItem>[
+              for (final crumb in _controller.breadCrumbs)
+                BreadCrumbItem(
+                  padding: EdgeInsets.symmetric(horizontal: 8, vertical: 12),
+                  content: Text(crumb.name, style: theme.textTheme.bodyText1),
+                  onTap: () => _controller.go(crumb.path),
+                ),
+            ],
+            divider: Icon(Icons.chevron_right),
+          ),
         );
       },
     );

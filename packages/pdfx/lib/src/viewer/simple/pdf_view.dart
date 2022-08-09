@@ -73,7 +73,7 @@ class PdfView extends StatefulWidget {
       );
 
   @override
-  State<PdfView> createState() => _PdfViewState();
+  _PdfViewState createState() => _PdfViewState();
 }
 
 class _PdfViewState extends State<PdfView> {

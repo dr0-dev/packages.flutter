@@ -36,7 +36,7 @@ void main() {
     } catch (e) {
       expect(
         e.toString(),
-        Exception('id3: id4 Id assertion failed').toString(),
+        FlutterError('id3: id4 Id assertion failed').toString(),
       );
     }
 

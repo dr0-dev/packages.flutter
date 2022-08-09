@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:internet_file/internet_file.dart';
 import 'package:pdfx/pdfx.dart';
+import 'package:performance/performance.dart';
 
 class PinchPage extends StatefulWidget {
   const PinchPage({Key? key}) : super(key: key);
 
   @override
-  State<PinchPage> createState() => _PinchPageState();
+  _PinchPageState createState() => _PinchPageState();
 }
 
 class _PinchPageState extends State<PinchPage> {
@@ -84,16 +85,19 @@ class _PinchPageState extends State<PinchPage> {
           )
         ],
       ),
-      body: PdfViewPinch(
-        builders: PdfViewPinchBuilders<DefaultBuilderOptions>(
-          options: const DefaultBuilderOptions(),
-          documentLoaderBuilder: (_) =>
-              const Center(child: CircularProgressIndicator()),
-          pageLoaderBuilder: (_) =>
-              const Center(child: CircularProgressIndicator()),
-          errorBuilder: (_, error) => Center(child: Text(error.toString())),
+      body: CustomPerformanceOverlay(
+        enabled: false,
+        child: PdfViewPinch(
+          builders: PdfViewPinchBuilders<DefaultBuilderOptions>(
+            options: const DefaultBuilderOptions(),
+            documentLoaderBuilder: (_) =>
+                const Center(child: CircularProgressIndicator()),
+            pageLoaderBuilder: (_) =>
+                const Center(child: CircularProgressIndicator()),
+            errorBuilder: (_, error) => Center(child: Text(error.toString())),
+          ),
+          controller: _pdfControllerPinch,
         ),
-        controller: _pdfControllerPinch,
       ),
     );
   }

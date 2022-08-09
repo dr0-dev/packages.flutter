@@ -130,14 +130,15 @@ class FormatCommand extends PluginCommand {
     if (clangFiles.isNotEmpty) {
       final String clangFormat = getStringArg('clang-format');
       if (!await _hasDependency(clangFormat)) {
-        printError('Unable to run "clang-format". Make sure that it is in your '
+        printError(
+            'Unable to run \'clang-format\'. Make sure that it is in your '
             'path, or provide a full path with --clang-format.');
         throw ToolExit(_exitDependencyMissing);
       }
 
       print('Formatting .cc, .cpp, .h, .m, and .mm files...');
       final int exitCode = await _runBatched(
-          getStringArg('clang-format'), <String>['-i', '--style=file'],
+          getStringArg('clang-format'), <String>['-i', '--style=Google'],
           files: clangFiles);
       if (exitCode != 0) {
         printError(
@@ -155,7 +156,7 @@ class FormatCommand extends PluginCommand {
       final String java = getStringArg('java');
       if (!await _hasDependency(java)) {
         printError(
-            'Unable to run "java". Make sure that it is in your path, or '
+            'Unable to run \'java\'. Make sure that it is in your path, or '
             'provide a full path with --java.');
         throw ToolExit(_exitDependencyMissing);
       }
@@ -240,9 +241,10 @@ class FormatCommand extends PluginCommand {
   }
 
   Iterable<String> _getPathsWithExtensions(
-          Iterable<String> files, Set<String> extensions) =>
-      files.where(
-          (String filePath) => extensions.contains(path.extension(filePath)));
+      Iterable<String> files, Set<String> extensions) {
+    return files.where(
+        (String filePath) => extensions.contains(path.extension(filePath)));
+  }
 
   Future<String> _getGoogleFormatterPath() async {
     final String javaFormatterPath = path.join(

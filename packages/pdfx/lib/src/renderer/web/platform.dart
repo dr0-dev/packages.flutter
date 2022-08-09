@@ -1,10 +1,8 @@
 import 'dart:async';
 import 'dart:html' as html;
 import 'dart:js' as js;
-// ignore: unnecessary_import
 import 'dart:typed_data';
 
-// ignore: unnecessary_import
 import 'package:flutter/painting.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_web_plugins/flutter_web_plugins.dart';
@@ -26,10 +24,6 @@ int _texId = -1;
 
 class PdfxWeb extends PdfxPlatform {
   PdfxWeb() {
-    assert(
-        checkPdfjsLibInstallation(),
-        'pdf.js not added in web/index.html. '
-        'Run «flutter pub run pdfx:install_web» or add script manually');
     _eventChannel.setController(_eventStreamController);
   }
 
@@ -232,14 +226,14 @@ class PdfPageImageWeb extends PdfPageImage {
     required bool removeTempFile,
     required PdfjsPage pdfJsPage,
   }) async {
-    final preViewport = pdfJsPage.getViewport(PdfjsViewportParams(scale: 1));
+    final _viewport = pdfJsPage.getViewport(PdfjsViewportParams(scale: 1));
     final html.CanvasElement canvas =
         js.context['document'].createElement('canvas');
     final html.CanvasRenderingContext2D context =
         canvas.getContext('2d') as html.CanvasRenderingContext2D;
 
     final viewport = pdfJsPage
-        .getViewport(PdfjsViewportParams(scale: width / preViewport.width));
+        .getViewport(PdfjsViewportParams(scale: width / _viewport.width));
 
     canvas
       ..height = viewport.height.toInt()
@@ -408,14 +402,11 @@ class PdfPageTextureWeb extends PdfPageTexture {
     final vp1 = page.renderer.getViewport(PdfjsViewportParams(scale: 1));
     final pw = vp1.width;
     //final ph = vp1.height;
-    final preFullWidth = fullWidth ?? pw;
+    final _fullWidth = fullWidth ?? pw;
     //final fullHeight = args['fullHeight'] as double? ?? ph;
-    final preWidth = width;
-    final preHeight = height;
-    if (preWidth == null ||
-        preHeight == null ||
-        preWidth <= 0 ||
-        preHeight <= 0) {
+    final _width = width;
+    final _height = height;
+    if (_width == null || _height == null || _width <= 0 || _height <= 0) {
       return false;
     }
 
@@ -423,15 +414,15 @@ class PdfPageTextureWeb extends PdfPageTexture {
     final offsetY = -sourceY.toDouble();
 
     final vp = page.renderer.getViewport(PdfjsViewportParams(
-      scale: preFullWidth / pw,
+      scale: _fullWidth / pw,
       offsetX: offsetX,
       offsetY: offsetY,
       dontFlip: dontFlip,
     ));
 
     final canvas = (html.document.createElement('canvas') as html.CanvasElement)
-      ..width = preWidth
-      ..height = preHeight;
+      ..width = _width
+      ..height = _height;
 
     final html.CanvasRenderingContext2D context =
         canvas.getContext('2d') as html.CanvasRenderingContext2D;
@@ -439,7 +430,7 @@ class PdfPageTextureWeb extends PdfPageTexture {
     if (backgroundColor != null) {
       context
         ..fillStyle = backgroundColor
-        ..fillRect(0, 0, preWidth, preHeight);
+        ..fillRect(0, 0, _width, _height);
     }
 
     final rendererContext = PdfjsRenderContext(
@@ -462,7 +453,7 @@ class PdfPageTextureWeb extends PdfPageTexture {
     });
     await completer.future;
 
-    return handleRawData(data, preWidth, preHeight);
+    return handleRawData(data, _width, _height);
   }
 }
 

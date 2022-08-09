@@ -24,7 +24,7 @@ class TestCommand extends PackageLoopingCommand {
       defaultsTo: '',
       help:
           'Runs Dart unit tests in Dart VM with the given experiments enabled. '
-          'See https://github.com/dart-lang/sdk/blob/main/docs/process/experimental-flags.md '
+          'See https://github.com/dart-lang/sdk/blob/master/docs/process/experimental-flags.md '
           'for details.',
     );
   }
@@ -37,17 +37,13 @@ class TestCommand extends PackageLoopingCommand {
       'This command requires "flutter" to be in your path.';
 
   @override
-  PackageLoopingType get packageLoopingType =>
-      PackageLoopingType.includeAllSubpackages;
-
-  @override
   Future<PackageResult> runForPackage(RepositoryPackage package) async {
-    if (!package.testDirectory.existsSync()) {
+    if (!package.directory.childDirectory('test').existsSync()) {
       return PackageResult.skip('No test/ directory.');
     }
 
     bool passed;
-    if (package.requiresFlutter()) {
+    if (isFlutterPackage(package.directory)) {
       passed = await _runFlutterTests(package);
     } else {
       passed = await _runDartTests(package);
@@ -66,7 +62,7 @@ class TestCommand extends PackageLoopingCommand {
         '--color',
         if (experiment.isNotEmpty) '--enable-experiment=$experiment',
         // TODO(ditman): Remove this once all plugins are migrated to 'drive'.
-        if (pluginSupportsPlatform(platformWeb, package)) '--platform=chrome',
+        if (pluginSupportsPlatform(kPlatformWeb, package)) '--platform=chrome',
       ],
       workingDir: package.directory,
     );
@@ -92,6 +88,7 @@ class TestCommand extends PackageLoopingCommand {
     exitCode = await processRunner.runAndStream(
       'dart',
       <String>[
+        'pub',
         'run',
         if (experiment.isNotEmpty) '--enable-experiment=$experiment',
         'test',

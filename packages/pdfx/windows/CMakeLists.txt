@@ -8,11 +8,11 @@ set(PDFIUM_VERSION "4634" CACHE STRING "Version of pdfium used")
 string(COMPARE GREATER_EQUAL ${PDFIUM_VERSION} "4690" PDFIUM_BINARY_NEW_FORMAT)
 
 if(${PDFIUM_VERSION} STREQUAL "latest")
-  set(PDFIUM_URL "https://github.com/bblanchon/pdfium-binaries/releases/latest/download/pdfium-win-arm64.tgz")
+  set(PDFIUM_URL "https://github.com/bblanchon/pdfium-binaries/releases/latest/download/pdfium-windows-${ARCH}.zip")
 elseif(PDFIUM_BINARY_NEW_FORMAT)
-  set(PDFIUM_URL "https://github.com/bblanchon/pdfium-binaries/releases/latest/download/pdfium-win-arm64.tgz")
+  set(PDFIUM_URL "https://github.com/bblanchon/pdfium-binaries/releases/download/chromium/${PDFIUM_VERSION}/pdfium-win-${ARCH}.tgz")
 else()
-  set(PDFIUM_URL "https://github.com/bblanchon/pdfium-binaries/releases/latest/download/pdfium-win-arm64.tgz")
+  set(PDFIUM_URL "https://github.com/bblanchon/pdfium-binaries/releases/download/chromium/${PDFIUM_VERSION}/pdfium-windows-${ARCH}.zip")
 endif()
 
 # Download pdfium

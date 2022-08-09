@@ -2,13 +2,10 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-import 'dart:io' as io;
-
 import 'package:args/command_runner.dart';
 import 'package:file/file.dart';
 import 'package:file/local.dart';
 import 'package:flutter_plugin_tools/src/create_all_plugins_app_command.dart';
-import 'package:platform/platform.dart';
 import 'package:test/test.dart';
 
 import 'util.dart';
@@ -48,7 +45,8 @@ void main() {
       createFakePlugin('pluginc', packagesDir);
 
       await runCapturingPrint(runner, <String>['all-plugins-app']);
-      final List<String> pubspec = command.app.pubspecFile.readAsLinesSync();
+      final List<String> pubspec =
+          command.appDirectory.childFile('pubspec.yaml').readAsLinesSync();
 
       expect(
           pubspec,
@@ -65,7 +63,8 @@ void main() {
       createFakePlugin('pluginc', packagesDir);
 
       await runCapturingPrint(runner, <String>['all-plugins-app']);
-      final List<String> pubspec = command.app.pubspecFile.readAsLinesSync();
+      final List<String> pubspec =
+          command.appDirectory.childFile('pubspec.yaml').readAsLinesSync();
 
       expect(
           pubspec,
@@ -77,30 +76,14 @@ void main() {
           ]));
     });
 
-    test('pubspec preserves existing Dart SDK version', () async {
-      const String baselineProjectName = 'baseline';
-      final Directory baselineProjectDirectory =
-          testRoot.childDirectory(baselineProjectName);
-      io.Process.runSync(
-        getFlutterCommand(const LocalPlatform()),
-        <String>[
-          'create',
-          '--template=app',
-          '--project-name=$baselineProjectName',
-          baselineProjectDirectory.path,
-        ],
-      );
-      final Pubspec baselinePubspec =
-          RepositoryPackage(baselineProjectDirectory).parsePubspec();
-
+    test('pubspec is compatible with null-safe app code', () async {
       createFakePlugin('plugina', packagesDir);
 
       await runCapturingPrint(runner, <String>['all-plugins-app']);
-      final Pubspec generatedPubspec = command.app.parsePubspec();
+      final String pubspec =
+          command.appDirectory.childFile('pubspec.yaml').readAsStringSync();
 
-      const String dartSdkKey = 'sdk';
-      expect(generatedPubspec.environment?[dartSdkKey],
-          baselinePubspec.environment?[dartSdkKey]);
+      expect(pubspec, contains(RegExp('sdk:\\s*(?:["\']>=|[^])2\\.12\\.')));
     });
 
     test('handles --output-dir', () async {
@@ -111,8 +94,8 @@ void main() {
       await runCapturingPrint(runner,
           <String>['all-plugins-app', '--output-dir=${customOutputDir.path}']);
 
-      expect(
-          command.app.path, customOutputDir.childDirectory('all_plugins').path);
+      expect(command.appDirectory.path,
+          customOutputDir.childDirectory('all_plugins').path);
     });
 
     test('logs exclusions', () async {

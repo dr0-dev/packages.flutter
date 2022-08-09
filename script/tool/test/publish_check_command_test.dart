@@ -44,9 +44,9 @@ void main() {
     });
 
     test('publish check all packages', () async {
-      final RepositoryPackage plugin1 =
+      final Directory plugin1Dir =
           createFakePlugin('plugin_tools_test_package_a', packagesDir);
-      final RepositoryPackage plugin2 =
+      final Directory plugin2Dir =
           createFakePlugin('plugin_tools_test_package_b', packagesDir);
 
       await runCapturingPrint(runner, <String>['publish-check']);
@@ -57,11 +57,11 @@ void main() {
             ProcessCall(
                 'flutter',
                 const <String>['pub', 'publish', '--', '--dry-run'],
-                plugin1.path),
+                plugin1Dir.path),
             ProcessCall(
                 'flutter',
                 const <String>['pub', 'publish', '--', '--dry-run'],
-                plugin2.path),
+                plugin2Dir.path),
           ]));
     });
 
@@ -89,8 +89,8 @@ void main() {
     });
 
     test('fail on bad pubspec', () async {
-      final RepositoryPackage package = createFakePlugin('c', packagesDir);
-      await package.pubspecFile.writeAsString('bad-yaml');
+      final Directory dir = createFakePlugin('c', packagesDir);
+      await dir.childFile('pubspec.yaml').writeAsString('bad-yaml');
 
       Error? commandError;
       final List<String> output = await runCapturingPrint(
@@ -108,9 +108,8 @@ void main() {
     });
 
     test('fails if AUTHORS is missing', () async {
-      final RepositoryPackage package =
-          createFakePackage('a_package', packagesDir);
-      package.authorsFile.delete();
+      final Directory package = createFakePackage('a_package', packagesDir);
+      package.childFile('AUTHORS').delete();
 
       Error? commandError;
       final List<String> output = await runCapturingPrint(
@@ -129,12 +128,12 @@ void main() {
     });
 
     test('does not require AUTHORS for third-party', () async {
-      final RepositoryPackage package = createFakePackage(
+      final Directory package = createFakePackage(
           'a_package',
           packagesDir.parent
               .childDirectory('third_party')
               .childDirectory('packages'));
-      package.authorsFile.delete();
+      package.childFile('AUTHORS').delete();
 
       final List<String> output =
           await runCapturingPrint(runner, <String>['publish-check']);
@@ -373,11 +372,11 @@ void main() {
       );
       runner.addCommand(command);
 
-      final RepositoryPackage plugin =
+      final Directory plugin1Dir =
           createFakePlugin('no_publish_a', packagesDir, version: '0.1.0');
       createFakePlugin('no_publish_b', packagesDir, version: '0.2.0');
 
-      await plugin.pubspecFile.writeAsString('bad-yaml');
+      await plugin1Dir.childFile('pubspec.yaml').writeAsString('bad-yaml');
 
       bool hasError = false;
       final List<String> output = await runCapturingPrint(

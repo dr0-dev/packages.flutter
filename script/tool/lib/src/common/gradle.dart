@@ -6,7 +6,6 @@ import 'package:file/file.dart';
 import 'package:platform/platform.dart';
 
 import 'process_runner.dart';
-import 'repository_package.dart';
 
 const String _gradleWrapperWindows = 'gradlew.bat';
 const String _gradleWrapperNonWindows = 'gradlew';
@@ -15,6 +14,9 @@ const String _gradleWrapperNonWindows = 'gradlew';
 class GradleProject {
   /// Creates an instance that runs commands for [project] with the given
   /// [processRunner].
+  ///
+  /// If [log] is true, commands run by this instance will long various status
+  /// messages.
   GradleProject(
     this.flutterProject, {
     this.processRunner = const ProcessRunner(),
@@ -22,7 +24,7 @@ class GradleProject {
   });
 
   /// The directory of a Flutter project to run Gradle commands in.
-  final RepositoryPackage flutterProject;
+  final Directory flutterProject;
 
   /// The [ProcessRunner] used to run commands. Overridable for testing.
   final ProcessRunner processRunner;
@@ -31,8 +33,7 @@ class GradleProject {
   final Platform platform;
 
   /// The project's 'android' directory.
-  Directory get androidDirectory =>
-      flutterProject.platformDirectory(FlutterPlatform.android);
+  Directory get androidDirectory => flutterProject.childDirectory('android');
 
   /// The path to the Gradle wrapper file for the project.
   File get gradleWrapper => androidDirectory.childFile(
@@ -46,10 +47,11 @@ class GradleProject {
   Future<int> runCommand(
     String target, {
     List<String> arguments = const <String>[],
-  }) =>
-      processRunner.runAndStream(
-        gradleWrapper.path,
-        <String>[target, ...arguments],
-        workingDir: androidDirectory,
-      );
+  }) {
+    return processRunner.runAndStream(
+      gradleWrapper.path,
+      <String>[target, ...arguments],
+      workingDir: androidDirectory,
+    );
+  }
 }

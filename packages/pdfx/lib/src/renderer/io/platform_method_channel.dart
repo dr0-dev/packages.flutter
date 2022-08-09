@@ -1,8 +1,6 @@
 import 'dart:async';
-// ignore: unnecessary_import
 import 'dart:typed_data';
 
-// ignore: unnecessary_import
 import 'package:flutter/painting.dart';
 import 'package:flutter/services.dart';
 import 'package:meta/meta.dart';

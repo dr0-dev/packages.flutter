@@ -30,13 +30,10 @@ class CreateAllPluginsAppCommand extends PluginCommand {
             'Defaults to the repository root.');
   }
 
-  /// The location to create the synthesized app project.
-  Directory get _appDirectory => packagesDir.fileSystem
+  /// The location of the synthesized app project.
+  Directory get appDirectory => packagesDir.fileSystem
       .directory(getStringArg(_outputDirectoryFlag))
       .childDirectory('all_plugins');
-
-  /// The synthesized app project.
-  RepositoryPackage get app => RepositoryPackage(_appDirectory);
 
   @override
   String get description =>
@@ -76,7 +73,7 @@ class CreateAllPluginsAppCommand extends PluginCommand {
         '--template=app',
         '--project-name=all_plugins',
         '--android-language=java',
-        _appDirectory.path,
+        appDirectory.path,
       ],
     );
 
@@ -86,8 +83,8 @@ class CreateAllPluginsAppCommand extends PluginCommand {
   }
 
   Future<void> _updateAppGradle() async {
-    final File gradleFile = app
-        .platformDirectory(FlutterPlatform.android)
+    final File gradleFile = appDirectory
+        .childDirectory('android')
         .childDirectory('app')
         .childFile('build.gradle');
     if (!gradleFile.existsSync()) {
@@ -110,7 +107,7 @@ class CreateAllPluginsAppCommand extends PluginCommand {
         newGradle.writeln('        multiDexEnabled true');
       } else if (line.contains('dependencies {')) {
         newGradle.writeln(
-          "    implementation 'com.google.guava:guava:27.0.1-android'\n",
+          '    implementation \'com.google.guava:guava:27.0.1-android\'\n',
         );
         // Tests for https://github.com/flutter/flutter/issues/43383
         newGradle.writeln(
@@ -122,8 +119,8 @@ class CreateAllPluginsAppCommand extends PluginCommand {
   }
 
   Future<void> _updateManifest() async {
-    final File manifestFile = app
-        .platformDirectory(FlutterPlatform.android)
+    final File manifestFile = appDirectory
+        .childDirectory('android')
         .childDirectory('app')
         .childDirectory('src')
         .childDirectory('main')
@@ -150,18 +147,6 @@ class CreateAllPluginsAppCommand extends PluginCommand {
   }
 
   Future<void> _genPubspecWithAllPlugins() async {
-    // Read the old pubspec file's Dart SDK version, in order to preserve it
-    // in the new file. The template sometimes relies on having opted in to
-    // specific language features via SDK version, so using a different one
-    // can cause compilation failures.
-    final Pubspec originalPubspec = app.parsePubspec();
-    const String dartSdkKey = 'sdk';
-    final VersionConstraint dartSdkConstraint =
-        originalPubspec.environment?[dartSdkKey] ??
-            VersionConstraint.compatibleWith(
-              Version.parse('2.12.0'),
-            );
-
     final Map<String, PathDependency> pluginDeps =
         await _getValidPathDependencies();
     final Pubspec pubspec = Pubspec(
@@ -169,7 +154,9 @@ class CreateAllPluginsAppCommand extends PluginCommand {
       description: 'Flutter app containing all 1st party plugins.',
       version: Version.parse('1.0.0+1'),
       environment: <String, VersionConstraint>{
-        dartSdkKey: dartSdkConstraint,
+        'sdk': VersionConstraint.compatibleWith(
+          Version.parse('2.12.0'),
+        ),
       },
       dependencies: <String, Dependency>{
         'flutter': SdkDependency('flutter'),
@@ -179,7 +166,8 @@ class CreateAllPluginsAppCommand extends PluginCommand {
       },
       dependencyOverrides: pluginDeps,
     );
-    app.pubspecFile.writeAsStringSync(_pubspecToString(pubspec));
+    final File pubspecFile = appDirectory.childFile('pubspec.yaml');
+    pubspecFile.writeAsStringSync(_pubspecToString(pubspec));
   }
 
   Future<Map<String, PathDependency>> _getValidPathDependencies() async {
@@ -190,7 +178,8 @@ class CreateAllPluginsAppCommand extends PluginCommand {
       final RepositoryPackage package = entry.package;
       final Directory pluginDirectory = package.directory;
       final String pluginName = pluginDirectory.basename;
-      final Pubspec pubspec = package.parsePubspec();
+      final File pubspecFile = package.pubspecFile;
+      final Pubspec pubspec = Pubspec.parse(pubspecFile.readAsStringSync());
 
       if (pubspec.publishTo != 'none') {
         pathDependencies[pluginName] = PathDependency(pluginDirectory.path);
@@ -199,7 +188,8 @@ class CreateAllPluginsAppCommand extends PluginCommand {
     return pathDependencies;
   }
 
-  String _pubspecToString(Pubspec pubspec) => '''
+  String _pubspecToString(Pubspec pubspec) {
+    return '''
 ### Generated file. Do not edit. Run `pub global run flutter_plugin_tools gen-pubspec` to update.
 name: ${pubspec.name}
 description: ${pubspec.description}
@@ -215,6 +205,7 @@ dependency_overrides:${_pubspecMapString(pubspec.dependencyOverrides)}
 
 dev_dependencies:${_pubspecMapString(pubspec.devDependencies)}
 ###''';
+  }
 
   String _pubspecMapString(Map<String, dynamic> values) {
     final StringBuffer buffer = StringBuffer();
@@ -222,12 +213,7 @@ dev_dependencies:${_pubspecMapString(pubspec.devDependencies)}
     for (final MapEntry<String, dynamic> entry in values.entries) {
       buffer.writeln();
       if (entry.value is VersionConstraint) {
-        String value = entry.value.toString();
-        // Range constraints require quoting.
-        if (value.startsWith('>') || value.startsWith('<')) {
-          value = "'$value'";
-        }
-        buffer.write('  ${entry.key}: $value');
+        buffer.write('  ${entry.key}: ${entry.value}');
       } else if (entry.value is SdkDependency) {
         final SdkDependency dep = entry.value as SdkDependency;
         buffer.write('  ${entry.key}: \n    sdk: ${dep.sdk}');

@@ -165,7 +165,7 @@ class Messages(private val binding : FlutterPlugin.FlutterPluginBinding,
             val cropX = if (crop) message.cropX!!.toInt() else 0
             val cropY = if (crop) message.cropY!!.toInt() else 0
             val cropH = if (crop) message.cropHeight!!.toInt() else 0
-            val cropW = if (crop) message.cropWidth!!.toInt() else 0
+            val cropW = if (crop) message.width!!.toInt() else 0
 
             val quality = message.quality?.toInt() ?: 100
 
@@ -252,7 +252,7 @@ class Messages(private val binding : FlutterPlugin.FlutterPluginBinding,
                 val texWidth = message.textureWidth!!.toInt()
                 val texHeight = message.textureHeight!!.toInt()
                 if (texWidth != 0 && texHeight != 0) {
-                    tex.surfaceTexture().setDefaultBufferSize(texWidth, texHeight)
+                    tex.surfaceTexture()?.setDefaultBufferSize(texWidth, texHeight)
                 }
 
                 Surface(tex.surfaceTexture()).use {
@@ -283,8 +283,8 @@ class Messages(private val binding : FlutterPlugin.FlutterPluginBinding,
         result.success(null)
     }
 
-    override fun unregisterTexture(message: Pigeon.UnregisterTextureMessage) {
-        val id = message.id!!.toInt()
+    override fun unregisterTexture(message: Pigeon.UnregisterTextureMessage?) {
+        val id = message!!.id!!.toInt()
         val tex = textures[id]
         tex?.release()
         textures.remove(id)

@@ -25,18 +25,21 @@ class DriveExamplesCommand extends PackageLoopingCommand {
     ProcessRunner processRunner = const ProcessRunner(),
     Platform platform = const LocalPlatform(),
   }) : super(packagesDir, processRunner: processRunner, platform: platform) {
-    argParser.addFlag(platformAndroid,
+    argParser.addFlag(kPlatformAndroid,
         help: 'Runs the Android implementation of the examples');
-    argParser.addFlag(platformIOS,
+    argParser.addFlag(kPlatformIos,
         help: 'Runs the iOS implementation of the examples');
-    argParser.addFlag(platformLinux,
+    argParser.addFlag(kPlatformLinux,
         help: 'Runs the Linux implementation of the examples');
-    argParser.addFlag(platformMacOS,
+    argParser.addFlag(kPlatformMacos,
         help: 'Runs the macOS implementation of the examples');
-    argParser.addFlag(platformWeb,
+    argParser.addFlag(kPlatformWeb,
         help: 'Runs the web implementation of the examples');
-    argParser.addFlag(platformWindows,
-        help: 'Runs the Windows implementation of the examples');
+    argParser.addFlag(kPlatformWindows,
+        help: 'Runs the Windows (Win32) implementation of the examples');
+    argParser.addFlag(kPlatformWinUwp,
+        help:
+            'Runs the UWP implementation of the examples [currently a no-op]');
     argParser.addOption(
       kEnableExperiment,
       defaultsTo: '',
@@ -61,14 +64,17 @@ class DriveExamplesCommand extends PackageLoopingCommand {
   @override
   Future<void> initializeRun() async {
     final List<String> platformSwitches = <String>[
-      platformAndroid,
-      platformIOS,
-      platformLinux,
-      platformMacOS,
-      platformWeb,
-      platformWindows,
+      kPlatformAndroid,
+      kPlatformIos,
+      kPlatformLinux,
+      kPlatformMacos,
+      kPlatformWeb,
+      kPlatformWindows,
+      kPlatformWinUwp,
     ];
-    final int platformCount = platformSwitches.where(getBoolArg).length;
+    final int platformCount = platformSwitches
+        .where((String platform) => getBoolArg(platform))
+        .length;
     // The flutter tool currently doesn't accept multiple device arguments:
     // https://github.com/flutter/flutter/issues/35733
     // If that is implemented, this check can be relaxed.
@@ -79,8 +85,12 @@ class DriveExamplesCommand extends PackageLoopingCommand {
       throw ToolExit(_exitNoPlatformFlags);
     }
 
+    if (getBoolArg(kPlatformWinUwp)) {
+      logWarning('Driving UWP applications is not yet supported');
+    }
+
     String? androidDevice;
-    if (getBoolArg(platformAndroid)) {
+    if (getBoolArg(kPlatformAndroid)) {
       final List<String> devices = await _getDevicesForPlatform('android');
       if (devices.isEmpty) {
         printError('No Android devices available');
@@ -89,79 +99,80 @@ class DriveExamplesCommand extends PackageLoopingCommand {
       androidDevice = devices.first;
     }
 
-    String? iOSDevice;
-    if (getBoolArg(platformIOS)) {
+    String? iosDevice;
+    if (getBoolArg(kPlatformIos)) {
       final List<String> devices = await _getDevicesForPlatform('ios');
       if (devices.isEmpty) {
         printError('No iOS devices available');
         throw ToolExit(_exitNoAvailableDevice);
       }
-      iOSDevice = devices.first;
+      iosDevice = devices.first;
     }
 
     _targetDeviceFlags = <String, List<String>>{
-      if (getBoolArg(platformAndroid))
-        platformAndroid: <String>['-d', androidDevice!],
-      if (getBoolArg(platformIOS)) platformIOS: <String>['-d', iOSDevice!],
-      if (getBoolArg(platformLinux)) platformLinux: <String>['-d', 'linux'],
-      if (getBoolArg(platformMacOS)) platformMacOS: <String>['-d', 'macos'],
-      if (getBoolArg(platformWeb))
-        platformWeb: <String>[
+      if (getBoolArg(kPlatformAndroid))
+        kPlatformAndroid: <String>['-d', androidDevice!],
+      if (getBoolArg(kPlatformIos)) kPlatformIos: <String>['-d', iosDevice!],
+      if (getBoolArg(kPlatformLinux)) kPlatformLinux: <String>['-d', 'linux'],
+      if (getBoolArg(kPlatformMacos)) kPlatformMacos: <String>['-d', 'macos'],
+      if (getBoolArg(kPlatformWeb))
+        kPlatformWeb: <String>[
           '-d',
           'web-server',
           '--web-port=7357',
-          '--browser-name=chrome',
-          if (platform.environment.containsKey('CHROME_EXECUTABLE'))
-            '--chrome-binary=${platform.environment['CHROME_EXECUTABLE']}',
+          '--browser-name=chrome'
         ],
-      if (getBoolArg(platformWindows))
-        platformWindows: <String>['-d', 'windows'],
+      if (getBoolArg(kPlatformWindows))
+        kPlatformWindows: <String>['-d', 'windows'],
+      // TODO(stuartmorgan): Check these flags once drive supports UWP:
+      // https://github.com/flutter/flutter/issues/82821
+      if (getBoolArg(kPlatformWinUwp))
+        kPlatformWinUwp: <String>['-d', 'winuwp'],
     };
   }
 
   @override
   Future<PackageResult> runForPackage(RepositoryPackage package) async {
-    final bool isPlugin = isFlutterPlugin(package);
-
-    if (package.isPlatformInterface && package.getExamples().isEmpty) {
+    if (package.isPlatformInterface &&
+        !package.getSingleExampleDeprecated().directory.existsSync()) {
       // Platform interface packages generally aren't intended to have
       // examples, and don't need integration tests, so skip rather than fail.
       return PackageResult.skip(
           'Platform interfaces are not expected to have integration tests.');
     }
 
-    // For plugin packages, skip if the plugin itself doesn't support any
-    // requested platform(s).
-    if (isPlugin) {
-      final Iterable<String> requestedPlatforms = _targetDeviceFlags.keys;
-      final Iterable<String> unsupportedPlatforms = requestedPlatforms.where(
-          (String platform) => !pluginSupportsPlatform(platform, package));
-      for (final String platform in unsupportedPlatforms) {
-        print('Skipping unsupported platform $platform...');
+    final List<String> deviceFlags = <String>[];
+    for (final MapEntry<String, List<String>> entry
+        in _targetDeviceFlags.entries) {
+      final String platform = entry.key;
+      String? variant;
+      if (platform == kPlatformWindows) {
+        variant = platformVariantWin32;
+      } else if (platform == kPlatformWinUwp) {
+        variant = platformVariantWinUwp;
+        // TODO(stuartmorgan): Remove this once drive supports UWP.
+        // https://github.com/flutter/flutter/issues/82821
+        return PackageResult.skip('Drive does not yet support UWP');
       }
-      if (unsupportedPlatforms.length == requestedPlatforms.length) {
-        return PackageResult.skip(
-            '${package.displayName} does not support any requested platform.');
+      if (pluginSupportsPlatform(platform, package, variant: variant)) {
+        deviceFlags.addAll(entry.value);
+      } else {
+        print('Skipping unsupported platform ${entry.key}...');
       }
+    }
+    // If there is no supported target platform, skip the plugin.
+    if (deviceFlags.isEmpty) {
+      return PackageResult.skip(
+          '${package.displayName} does not support any requested platform.');
     }
 
     int examplesFound = 0;
-    int supportedExamplesFound = 0;
     bool testsRan = false;
     final List<String> errors = <String>[];
     for (final RepositoryPackage example in package.getExamples()) {
       ++examplesFound;
       final String exampleName =
           getRelativePosixPath(example.directory, from: packagesDir);
-
-      // Skip examples that don't support any requested platform(s).
-      final List<String> deviceFlags = _deviceFlagsForExample(example);
-      if (deviceFlags.isEmpty) {
-        print(
-            'Skipping $exampleName; does not support any requested platforms.');
-        continue;
-      }
-      ++supportedExamplesFound;
 
       final List<File> drivers = await _getDrivers(example);
       if (drivers.isEmpty) {
@@ -180,16 +191,7 @@ class DriveExamplesCommand extends PackageLoopingCommand {
         if (legacyTestFile != null) {
           testTargets.add(legacyTestFile);
         } else {
-          for (final File testFile in await _getIntegrationTests(example)) {
-            // Check files for known problematic patterns.
-            final bool passesValidation = _validateIntegrationTest(testFile);
-            if (!passesValidation) {
-              // Report the issue, but continue with the test as the validation
-              // errors don't prevent running.
-              errors.add('${testFile.basename} failed validation');
-            }
-            testTargets.add(testFile);
-          }
+          (await _getIntegrationTests(example)).forEach(testTargets.add);
         }
 
         if (testTargets.isEmpty) {
@@ -212,39 +214,12 @@ class DriveExamplesCommand extends PackageLoopingCommand {
       }
     }
     if (!testsRan) {
-      // It is an error for a plugin not to have integration tests, because that
-      // is the only way to test the method channel communication.
-      if (isPlugin) {
-        printError(
-            'No driver tests were run ($examplesFound example(s) found).');
-        errors.add('No tests ran (use --exclude if this is intentional).');
-      } else {
-        return PackageResult.skip(supportedExamplesFound == 0
-            ? 'No example supports requested platform(s).'
-            : 'No example is configured for driver tests.');
-      }
+      printError('No driver tests were run ($examplesFound example(s) found).');
+      errors.add('No tests ran (use --exclude if this is intentional).');
     }
     return errors.isEmpty
         ? PackageResult.success()
         : PackageResult.fail(errors);
-  }
-
-  /// Returns the device flags for the intersection of the requested platforms
-  /// and the platforms supported by [example].
-  List<String> _deviceFlagsForExample(RepositoryPackage example) {
-    final List<String> deviceFlags = <String>[];
-    for (final MapEntry<String, List<String>> entry
-        in _targetDeviceFlags.entries) {
-      final String platform = entry.key;
-      if (example.directory.childDirectory(platform).existsSync()) {
-        deviceFlags.addAll(entry.value);
-      } else {
-        final String exampleName =
-            getRelativePosixPath(example.directory, from: packagesDir);
-        print('Skipping unsupported platform $platform for $exampleName');
-      }
-    }
-    return deviceFlags;
   }
 
   Future<List<String>> _getDevicesForPlatform(String platform) async {
@@ -315,25 +290,6 @@ class DriveExamplesCommand extends PackageLoopingCommand {
       }
     }
     return tests;
-  }
-
-  /// Checks [testFile] for known bad patterns in integration tests, logging
-  /// any issues.
-  ///
-  /// Returns true if the file passes validation without issues.
-  bool _validateIntegrationTest(File testFile) {
-    final List<String> lines = testFile.readAsLinesSync();
-
-    final RegExp badTestPattern = RegExp(r'\s*test\(');
-    if (lines.any((String line) => line.startsWith(badTestPattern))) {
-      final String filename = testFile.basename;
-      printError(
-          '$filename uses "test", which will not report failures correctly. '
-          'Use testWidgets instead.');
-      return false;
-    }
-
-    return true;
   }
 
   /// For each file in [targets], uses

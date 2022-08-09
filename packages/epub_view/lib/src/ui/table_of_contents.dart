@@ -52,7 +52,7 @@ class EpubViewTableOfContents extends StatelessWidget {
           return AnimatedSwitcher(
             duration: const Duration(milliseconds: 250),
             transitionBuilder: (Widget child, Animation<double> animation) =>
-                FadeTransition(opacity: animation, child: child),
+                FadeTransition(child: child, opacity: animation),
             child: content,
           );
         },

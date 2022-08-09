@@ -21,23 +21,20 @@ class GitVersionFinder {
   /// The base sha used to get diff.
   String? _baseSha;
 
-  static bool _isPubspec(String file) => file.trim().endsWith('pubspec.yaml');
+  static bool _isPubspec(String file) {
+    return file.trim().endsWith('pubspec.yaml');
+  }
 
   /// Get a list of all the pubspec.yaml file that is changed.
-  Future<List<String>> getChangedPubSpecs() async =>
-      (await getChangedFiles()).where(_isPubspec).toList();
+  Future<List<String>> getChangedPubSpecs() async {
+    return (await getChangedFiles()).where(_isPubspec).toList();
+  }
 
   /// Get a list of all the changed files.
-  Future<List<String>> getChangedFiles(
-      {bool includeUncommitted = false}) async {
+  Future<List<String>> getChangedFiles() async {
     final String baseSha = await getBaseSha();
     final io.ProcessResult changedFilesCommand = await baseGitDir
-        .runCommand(<String>[
-      'diff',
-      '--name-only',
-      baseSha,
-      if (!includeUncommitted) 'HEAD'
-    ]);
+        .runCommand(<String>['diff', '--name-only', baseSha, 'HEAD']);
     final String changedFilesStdout = changedFilesCommand.stdout.toString();
     if (changedFilesStdout.isEmpty) {
       return <String>[];
@@ -78,9 +75,8 @@ class GitVersionFinder {
     io.ProcessResult baseShaFromMergeBase = await baseGitDir.runCommand(
         <String>['merge-base', '--fork-point', 'FETCH_HEAD', 'HEAD'],
         throwOnError: false);
-    final String stdout = (baseShaFromMergeBase.stdout as String? ?? '').trim();
-    final String stderr = (baseShaFromMergeBase.stdout as String? ?? '').trim();
-    if (stderr.isNotEmpty || stdout.isEmpty) {
+    if (baseShaFromMergeBase.stderr != null ||
+        baseShaFromMergeBase.stdout == null) {
       baseShaFromMergeBase = await baseGitDir
           .runCommand(<String>['merge-base', 'FETCH_HEAD', 'HEAD']);
     }

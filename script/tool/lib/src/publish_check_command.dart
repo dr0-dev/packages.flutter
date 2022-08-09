@@ -10,6 +10,7 @@ import 'package:file/file.dart';
 import 'package:http/http.dart' as http;
 import 'package:platform/platform.dart';
 import 'package:pub_semver/pub_semver.dart';
+import 'package:pubspec_parse/pubspec_parse.dart';
 
 import 'common/core.dart';
 import 'common/package_looping_command.dart';
@@ -122,12 +123,13 @@ class PublishCheckCommand extends PackageLoopingCommand {
   }
 
   Pubspec? _tryParsePubspec(RepositoryPackage package) {
+    final File pubspecFile = package.pubspecFile;
+
     try {
-      return package.parsePubspec();
+      return Pubspec.parse(pubspecFile.readAsStringSync());
     } on Exception catch (exception) {
       print(
-        'Failed to parse `pubspec.yaml` at ${package.pubspecFile.path}: '
-        '$exception',
+        'Failed to parse `pubspec.yaml` at ${pubspecFile.path}: $exception}',
       );
       return null;
     }
@@ -152,7 +154,7 @@ class PublishCheckCommand extends PackageLoopingCommand {
           outputBuffer.write(output);
         }
       },
-      onDone: stdOutCompleter.complete,
+      onDone: () => stdOutCompleter.complete(),
     );
 
     final Completer<void> stdInCompleter = Completer<void>();
@@ -167,7 +169,7 @@ class PublishCheckCommand extends PackageLoopingCommand {
           outputBuffer.write(output);
         }
       },
-      onDone: stdInCompleter.complete,
+      onDone: () => stdInCompleter.complete(),
     );
 
     if (await process.exitCode == 0) {
@@ -246,12 +248,12 @@ HTTP response: ${pubVersionFinderResponse.httpResponse.body}
 
   bool _passesAuthorsCheck(RepositoryPackage package) {
     final List<String> pathComponents =
-        package.directory.fileSystem.path.split(package.path);
+        package.directory.fileSystem.path.split(package.directory.path);
     if (pathComponents.contains('third_party')) {
       // Third-party packages aren't required to have an AUTHORS file.
       return true;
     }
-    return package.authorsFile.existsSync();
+    return package.directory.childFile('AUTHORS').existsSync();
   }
 
   void _printImportantStatusMessage(String message, {required bool isError}) {

@@ -72,7 +72,7 @@ class LiveSliverList extends StatefulWidget {
   final int itemCount;
 
   @override
-  State<LiveSliverList> createState() => _LiveSliverListState();
+  _LiveSliverListState createState() => _LiveSliverListState();
 }
 
 class _LiveSliverListState extends State<LiveSliverList>

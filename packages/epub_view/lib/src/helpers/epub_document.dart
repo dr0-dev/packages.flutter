@@ -1,4 +1,3 @@
-// ignore: unnecessary_import
 import 'dart:typed_data';
 
 import 'package:epubx/epubx.dart';

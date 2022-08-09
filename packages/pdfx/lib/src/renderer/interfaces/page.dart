@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:typed_data' show Uint8List;
 import 'dart:ui';
 
+import 'package:extension/enum.dart';
 import 'package:meta/meta.dart';
 import 'document.dart';
 
@@ -9,15 +10,14 @@ part 'page_image.dart';
 part 'page_texture.dart';
 
 /// Image compression format
-enum PdfPageImageFormat {
-  jpeg(0),
-  png(1),
-  // /// ***Attention!*** Works only on android
-  // static const PdfPageImageFormat webp = PdfPageImageFormat(2);
-  webp(2);
+class PdfPageImageFormat extends Enum<int> {
+  const PdfPageImageFormat(int val) : super(val);
 
-  const PdfPageImageFormat(this.value);
-  final int value;
+  static const PdfPageImageFormat jpeg = PdfPageImageFormat(0);
+  static const PdfPageImageFormat png = PdfPageImageFormat(1);
+
+  /// ***Attention!*** Works only on android
+  static const PdfPageImageFormat webp = PdfPageImageFormat(2);
 }
 
 /// An integral part of a document is its page,

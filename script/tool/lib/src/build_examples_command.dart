@@ -33,11 +33,12 @@ const int _exitInvalidPluginToolsConfig = 4;
 
 // Flutter build types. These are the values passed to `flutter build <foo>`.
 const String _flutterBuildTypeAndroid = 'apk';
-const String _flutterBuildTypeIOS = 'ios';
+const String _flutterBuildTypeIos = 'ios';
 const String _flutterBuildTypeLinux = 'linux';
 const String _flutterBuildTypeMacOS = 'macos';
 const String _flutterBuildTypeWeb = 'web';
-const String _flutterBuildTypeWindows = 'windows';
+const String _flutterBuildTypeWin32 = 'windows';
+const String _flutterBuildTypeWinUwp = 'winuwp';
 
 /// A command to build the example applications for packages.
 class BuildExamplesCommand extends PackageLoopingCommand {
@@ -47,11 +48,12 @@ class BuildExamplesCommand extends PackageLoopingCommand {
     ProcessRunner processRunner = const ProcessRunner(),
     Platform platform = const LocalPlatform(),
   }) : super(packagesDir, processRunner: processRunner, platform: platform) {
-    argParser.addFlag(platformLinux);
-    argParser.addFlag(platformMacOS);
-    argParser.addFlag(platformWeb);
-    argParser.addFlag(platformWindows);
-    argParser.addFlag(platformIOS);
+    argParser.addFlag(kPlatformLinux);
+    argParser.addFlag(kPlatformMacos);
+    argParser.addFlag(kPlatformWeb);
+    argParser.addFlag(kPlatformWindows);
+    argParser.addFlag(kPlatformWinUwp);
+    argParser.addFlag(kPlatformIos);
     argParser.addFlag(_platformFlagApk);
     argParser.addOption(
       kEnableExperiment,
@@ -66,34 +68,41 @@ class BuildExamplesCommand extends PackageLoopingCommand {
       <String, _PlatformDetails>{
     _platformFlagApk: const _PlatformDetails(
       'Android',
-      pluginPlatform: platformAndroid,
+      pluginPlatform: kPlatformAndroid,
       flutterBuildType: _flutterBuildTypeAndroid,
     ),
-    platformIOS: const _PlatformDetails(
+    kPlatformIos: const _PlatformDetails(
       'iOS',
-      pluginPlatform: platformIOS,
-      flutterBuildType: _flutterBuildTypeIOS,
+      pluginPlatform: kPlatformIos,
+      flutterBuildType: _flutterBuildTypeIos,
       extraBuildFlags: <String>['--no-codesign'],
     ),
-    platformLinux: const _PlatformDetails(
+    kPlatformLinux: const _PlatformDetails(
       'Linux',
-      pluginPlatform: platformLinux,
+      pluginPlatform: kPlatformLinux,
       flutterBuildType: _flutterBuildTypeLinux,
     ),
-    platformMacOS: const _PlatformDetails(
+    kPlatformMacos: const _PlatformDetails(
       'macOS',
-      pluginPlatform: platformMacOS,
+      pluginPlatform: kPlatformMacos,
       flutterBuildType: _flutterBuildTypeMacOS,
     ),
-    platformWeb: const _PlatformDetails(
+    kPlatformWeb: const _PlatformDetails(
       'web',
-      pluginPlatform: platformWeb,
+      pluginPlatform: kPlatformWeb,
       flutterBuildType: _flutterBuildTypeWeb,
     ),
-    platformWindows: const _PlatformDetails(
-      'Windows',
-      pluginPlatform: platformWindows,
-      flutterBuildType: _flutterBuildTypeWindows,
+    kPlatformWindows: const _PlatformDetails(
+      'Win32',
+      pluginPlatform: kPlatformWindows,
+      pluginPlatformVariant: platformVariantWin32,
+      flutterBuildType: _flutterBuildTypeWin32,
+    ),
+    kPlatformWinUwp: const _PlatformDetails(
+      'UWP',
+      pluginPlatform: kPlatformWindows,
+      pluginPlatformVariant: platformVariantWinUwp,
+      flutterBuildType: _flutterBuildTypeWinUwp,
     ),
   };
 
@@ -115,7 +124,7 @@ class BuildExamplesCommand extends PackageLoopingCommand {
   Future<void> initializeRun() async {
     final List<String> platformFlags = _platforms.keys.toList();
     platformFlags.sort();
-    if (!platformFlags.any(getBoolArg)) {
+    if (!platformFlags.any((String platform) => getBoolArg(platform))) {
       printError(
           'None of ${platformFlags.map((String platform) => '--$platform').join(', ')} '
           'were specified. At least one platform must be provided.');
@@ -137,13 +146,15 @@ class BuildExamplesCommand extends PackageLoopingCommand {
     // no package-level platform information for non-plugin packages.
     final Set<_PlatformDetails> buildPlatforms = isPlugin
         ? requestedPlatforms
-            .where((_PlatformDetails platform) =>
-                pluginSupportsPlatform(platform.pluginPlatform, package))
+            .where((_PlatformDetails platform) => pluginSupportsPlatform(
+                platform.pluginPlatform, package,
+                variant: platform.pluginPlatformVariant))
             .toSet()
         : requestedPlatforms.toSet();
 
-    String platformDisplayList(Iterable<_PlatformDetails> platforms) =>
-        platforms.map((_PlatformDetails p) => p.label).join(', ');
+    String platformDisplayList(Iterable<_PlatformDetails> platforms) {
+      return platforms.map((_PlatformDetails p) => p.label).join(', ');
+    }
 
     if (buildPlatforms.isEmpty) {
       final String unsupported = requestedPlatforms.length == 1
@@ -269,6 +280,22 @@ class BuildExamplesCommand extends PackageLoopingCommand {
   }) async {
     final String enableExperiment = getStringArg(kEnableExperiment);
 
+    // The UWP template is not yet stable, so the UWP directory
+    // needs to be created on the fly with 'flutter create .'
+    Directory? temporaryPlatformDirectory;
+    if (flutterBuildType == _flutterBuildTypeWinUwp) {
+      final Directory uwpDirectory = example.directory.childDirectory('winuwp');
+      if (!uwpDirectory.existsSync()) {
+        print('Creating temporary winuwp folder');
+        final int exitCode = await processRunner.runAndStream(flutterCommand,
+            <String>['create', '--platforms=$kPlatformWinUwp', '.'],
+            workingDir: example.directory);
+        if (exitCode == 0) {
+          temporaryPlatformDirectory = uwpDirectory;
+        }
+      }
+    }
+
     final int exitCode = await processRunner.runAndStream(
       flutterCommand,
       <String>[
@@ -281,6 +308,13 @@ class BuildExamplesCommand extends PackageLoopingCommand {
       ],
       workingDir: example.directory,
     );
+
+    if (temporaryPlatformDirectory != null &&
+        temporaryPlatformDirectory.existsSync()) {
+      print('Cleaning up ${temporaryPlatformDirectory.path}');
+      temporaryPlatformDirectory.deleteSync(recursive: true);
+    }
+
     return exitCode == 0;
   }
 }
@@ -290,6 +324,7 @@ class _PlatformDetails {
   const _PlatformDetails(
     this.label, {
     required this.pluginPlatform,
+    this.pluginPlatformVariant,
     required this.flutterBuildType,
     this.extraBuildFlags = const <String>[],
   });
@@ -299,6 +334,10 @@ class _PlatformDetails {
 
   /// The key in a pubspec's platform: entry.
   final String pluginPlatform;
+
+  /// The supportedVariants key under a plugin's [pluginPlatform] entry, if
+  /// applicable.
+  final String? pluginPlatformVariant;
 
   /// The `flutter build` build type.
   final String flutterBuildType;

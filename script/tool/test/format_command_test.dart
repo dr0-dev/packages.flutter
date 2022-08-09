@@ -50,10 +50,10 @@ void main() {
   /// Returns a modified version of a list of [relativePaths] that are relative
   /// to [package] to instead be relative to [packagesDir].
   List<String> _getPackagesDirRelativePaths(
-      RepositoryPackage package, List<String> relativePaths) {
+      Directory packageDir, List<String> relativePaths) {
     final p.Context path = analyzeCommand.path;
     final String relativeBase =
-        path.relative(package.path, from: packagesDir.path);
+        path.relative(packageDir.path, from: packagesDir.path);
     return relativePaths
         .map((String relativePath) => path.join(relativeBase, relativePath))
         .toList();
@@ -86,7 +86,7 @@ void main() {
       'lib/src/b.dart',
       'lib/src/c.dart',
     ];
-    final RepositoryPackage plugin = createFakePlugin(
+    final Directory pluginDir = createFakePlugin(
       'a_plugin',
       packagesDir,
       extraFiles: files,
@@ -101,7 +101,7 @@ void main() {
               getFlutterCommand(mockPlatform),
               <String>[
                 'format',
-                ..._getPackagesDirRelativePaths(plugin, files)
+                ..._getPackagesDirRelativePaths(pluginDir, files)
               ],
               packagesDir.path),
         ]));
@@ -114,7 +114,7 @@ void main() {
       'lib/src/c.dart',
     ];
     const String unformattedFile = 'lib/src/d.dart';
-    final RepositoryPackage plugin = createFakePlugin(
+    final Directory pluginDir = createFakePlugin(
       'a_plugin',
       packagesDir,
       extraFiles: <String>[
@@ -124,8 +124,7 @@ void main() {
     );
 
     final p.Context posixContext = p.posix;
-    childFileWithSubcomponents(
-            plugin.directory, posixContext.split(unformattedFile))
+    childFileWithSubcomponents(pluginDir, posixContext.split(unformattedFile))
         .writeAsStringSync(
             '// copyright bla bla\n// This file is hand-formatted.\ncode...');
 
@@ -138,7 +137,7 @@ void main() {
               getFlutterCommand(mockPlatform),
               <String>[
                 'format',
-                ..._getPackagesDirRelativePaths(plugin, formattedFiles)
+                ..._getPackagesDirRelativePaths(pluginDir, formattedFiles)
               ],
               packagesDir.path),
         ]));
@@ -173,7 +172,7 @@ void main() {
       'android/src/main/java/io/flutter/plugins/a_plugin/a.java',
       'android/src/main/java/io/flutter/plugins/a_plugin/b.java',
     ];
-    final RepositoryPackage plugin = createFakePlugin(
+    final Directory pluginDir = createFakePlugin(
       'a_plugin',
       packagesDir,
       extraFiles: files,
@@ -191,7 +190,7 @@ void main() {
                 '-jar',
                 javaFormatPath,
                 '--replace',
-                ..._getPackagesDirRelativePaths(plugin, files)
+                ..._getPackagesDirRelativePaths(pluginDir, files)
               ],
               packagesDir.path),
         ]));
@@ -218,7 +217,7 @@ void main() {
         output,
         containsAllInOrder(<Matcher>[
           contains(
-              'Unable to run "java". Make sure that it is in your path, or '
+              'Unable to run \'java\'. Make sure that it is in your path, or '
               'provide a full path with --java.'),
         ]));
   });
@@ -253,7 +252,7 @@ void main() {
       'android/src/main/java/io/flutter/plugins/a_plugin/a.java',
       'android/src/main/java/io/flutter/plugins/a_plugin/b.java',
     ];
-    final RepositoryPackage plugin = createFakePlugin(
+    final Directory pluginDir = createFakePlugin(
       'a_plugin',
       packagesDir,
       extraFiles: files,
@@ -271,7 +270,7 @@ void main() {
                 '-jar',
                 javaFormatPath,
                 '--replace',
-                ..._getPackagesDirRelativePaths(plugin, files)
+                ..._getPackagesDirRelativePaths(pluginDir, files)
               ],
               packagesDir.path),
         ]));
@@ -286,7 +285,7 @@ void main() {
       'macos/Classes/Foo.mm',
       'windows/foo_plugin.cpp',
     ];
-    final RepositoryPackage plugin = createFakePlugin(
+    final Directory pluginDir = createFakePlugin(
       'a_plugin',
       packagesDir,
       extraFiles: files,
@@ -302,8 +301,8 @@ void main() {
               'clang-format',
               <String>[
                 '-i',
-                '--style=file',
-                ..._getPackagesDirRelativePaths(plugin, files)
+                '--style=Google',
+                ..._getPackagesDirRelativePaths(pluginDir, files)
               ],
               packagesDir.path),
         ]));
@@ -330,7 +329,8 @@ void main() {
     expect(
         output,
         containsAllInOrder(<Matcher>[
-          contains('Unable to run "clang-format". Make sure that it is in your '
+          contains(
+              'Unable to run \'clang-format\'. Make sure that it is in your '
               'path, or provide a full path with --clang-format.'),
         ]));
   });
@@ -339,7 +339,7 @@ void main() {
     const List<String> files = <String>[
       'windows/foo_plugin.cpp',
     ];
-    final RepositoryPackage plugin = createFakePlugin(
+    final Directory pluginDir = createFakePlugin(
       'a_plugin',
       packagesDir,
       extraFiles: files,
@@ -357,8 +357,8 @@ void main() {
               '/path/to/clang-format',
               <String>[
                 '-i',
-                '--style=file',
-                ..._getPackagesDirRelativePaths(plugin, files)
+                '--style=Google',
+                ..._getPackagesDirRelativePaths(pluginDir, files)
               ],
               packagesDir.path),
         ]));
@@ -403,7 +403,7 @@ void main() {
     const List<String> javaFiles = <String>[
       'android/src/main/java/io/flutter/plugins/a_plugin/a.java'
     ];
-    final RepositoryPackage plugin = createFakePlugin(
+    final Directory pluginDir = createFakePlugin(
       'a_plugin',
       packagesDir,
       extraFiles: <String>[
@@ -425,15 +425,15 @@ void main() {
               'clang-format',
               <String>[
                 '-i',
-                '--style=file',
-                ..._getPackagesDirRelativePaths(plugin, clangFiles)
+                '--style=Google',
+                ..._getPackagesDirRelativePaths(pluginDir, clangFiles)
               ],
               packagesDir.path),
           ProcessCall(
               getFlutterCommand(mockPlatform),
               <String>[
                 'format',
-                ..._getPackagesDirRelativePaths(plugin, dartFiles)
+                ..._getPackagesDirRelativePaths(pluginDir, dartFiles)
               ],
               packagesDir.path),
           ProcessCall(
@@ -442,13 +442,13 @@ void main() {
                 '-jar',
                 javaFormatPath,
                 '--replace',
-                ..._getPackagesDirRelativePaths(plugin, javaFiles)
+                ..._getPackagesDirRelativePaths(pluginDir, javaFiles)
               ],
               packagesDir.path),
         ]));
   });
 
-  test('fails if files are changed with --fail-on-change', () async {
+  test('fails if files are changed with --file-on-change', () async {
     const List<String> files = <String>[
       'linux/foo_plugin.cc',
       'macos/Classes/Foo.h',

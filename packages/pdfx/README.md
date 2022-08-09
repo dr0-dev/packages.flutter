@@ -12,7 +12,7 @@ Includes 2 api:
 
 | PdfViewPinch              | PdfView                    |
 |---------------------------|----------------------------|
-|![](https://raw.githubusercontent.com/ScerIO/packages.flutter/main/packages/pdfx/example/media/pinch.gif?raw=true)  | ![](https://raw.githubusercontent.com/ScerIO/packages.flutter/main/packages/pdfx/example/media/simple.gif?raw=true)  |
+|![](https://raw.githubusercontent.com/rbcprolabs/packages.flutter/master/packages/pdfx/example/media/pinch.gif?raw=true)  | ![](https://raw.githubusercontent.com/rbcprolabs/packages.flutter/master/packages/pdfx/example/media/simple.gif?raw=true)  |
 
 ## Getting Started
 In your flutter project add the dependency:
@@ -20,7 +20,7 @@ In your flutter project add the dependency:
 flutter pub add pdfx
 ```
 
-For web run tool for automatically add pdfjs library (CDN) in index.html:
+For web run tool for automatically add pdfjs library in index.html:
 ```shell
 flutter pub run pdfx:install_web
 ```
@@ -285,7 +285,7 @@ And use it
 ```dart
 import 'package:internet_file/internet_file.dart';
 
-PdfDocument.openData(InternetFile.get('https://github.com/ScerIO/packages.flutter/raw/fd0c92ac83ee355255acb306251b1adfeb2f2fd6/packages/native_pdf_renderer/example/assets/sample.pdf'))
+PdfDocument.openData(InternetFile.get('https://github.com/rbcprolabs/packages.flutter/raw/fd0c92ac83ee355255acb306251b1adfeb2f2fd6/packages/native_pdf_renderer/example/assets/sample.pdf'))
 ```
 
 **Open page:**

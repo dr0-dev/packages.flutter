@@ -14,8 +14,9 @@ import 'package:test/test.dart';
 
 void main() {
   test('Package does not exist.', () async {
-    final MockClient mockClient =
-        MockClient((http.Request request) async => http.Response('', 404));
+    final MockClient mockClient = MockClient((http.Request request) async {
+      return http.Response('', 404);
+    });
     final PubVersionFinder finder = PubVersionFinder(httpClient: mockClient);
     final PubVersionFinderResponse response =
         await finder.getPackageVersion(packageName: 'some_package');
@@ -27,8 +28,9 @@ void main() {
   });
 
   test('HTTP error when getting versions from pub', () async {
-    final MockClient mockClient =
-        MockClient((http.Request request) async => http.Response('', 400));
+    final MockClient mockClient = MockClient((http.Request request) async {
+      return http.Response('', 400);
+    });
     final PubVersionFinder finder = PubVersionFinder(httpClient: mockClient);
     final PubVersionFinderResponse response =
         await finder.getPackageVersion(packageName: 'some_package');
@@ -57,8 +59,9 @@ void main() {
         '1.0.0',
       ],
     };
-    final MockClient mockClient = MockClient((http.Request request) async =>
-        http.Response(json.encode(httpResponse), 200));
+    final MockClient mockClient = MockClient((http.Request request) async {
+      return http.Response(json.encode(httpResponse), 200);
+    });
     final PubVersionFinder finder = PubVersionFinder(httpClient: mockClient);
     final PubVersionFinderResponse response =
         await finder.getPackageVersion(packageName: 'some_package');

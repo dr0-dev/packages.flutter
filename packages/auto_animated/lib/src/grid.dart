@@ -206,7 +206,7 @@ class LiveGrid extends StatefulWidget {
   final bool addSemanticIndexes;
 
   @override
-  State<LiveGrid> createState() => _LiveGridViewState();
+  _LiveGridViewState createState() => _LiveGridViewState();
 }
 
 class _LiveGridViewState extends State<LiveGrid>

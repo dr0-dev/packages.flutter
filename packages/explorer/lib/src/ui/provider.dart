@@ -16,9 +16,9 @@ class ControllerProvider extends InheritedWidget {
   final ScrollController? scrollController;
 
   @override
-  bool updateShouldNotify(ControllerProvider oldWidget) =>
-      explorerController != oldWidget.explorerController ||
-      scrollController != oldWidget.scrollController;
+  bool updateShouldNotify(ControllerProvider old) =>
+      explorerController != old.explorerController ||
+      scrollController != old.scrollController;
 
   static ControllerProvider? of(BuildContext context) =>
       context.findAncestorWidgetOfExactType<ControllerProvider>();

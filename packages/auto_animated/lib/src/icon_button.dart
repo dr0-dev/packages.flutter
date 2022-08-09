@@ -11,7 +11,7 @@ enum IconState { first, second }
 ///[icon] cannot be null.
 ///[duration] is the time taken to animate the transition.
 class LiveIconButton extends StatefulWidget {
-  const LiveIconButton({
+  LiveIconButton({
     required this.icon,
     required this.onPressed,
     Key? key,
@@ -33,7 +33,7 @@ class LiveIconButton extends StatefulWidget {
   })  : iconState = null,
         super(key: key);
 
-  const LiveIconButton.externalState({
+  LiveIconButton.externalState({
     required this.icon,
     required this.onPressed,
     required this.iconState,
@@ -69,7 +69,7 @@ class LiveIconButton extends StatefulWidget {
   final IconState? iconState;
 
   @override
-  State<LiveIconButton> createState() => _LiveIconButtonState();
+  _LiveIconButtonState createState() => _LiveIconButtonState();
 }
 
 class _LiveIconButtonState extends State<LiveIconButton>
