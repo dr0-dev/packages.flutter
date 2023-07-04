@@ -20,7 +20,7 @@ dependencies:
   extension: ^0.2.0
   synchronized: ^3.0.0
   universal_platform: ^1.0.0+1
-  photo_view: ^0.13.0
+  photo_view: 0.14.0
   vector_math: ^2.1.01
 
 dev_dependencies:
