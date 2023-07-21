@@ -15,7 +15,7 @@ project(${PROJECT_NAME} LANGUAGES CXX)
 #  set(PDFIUM_URL "https://github.com/bblanchon/pdfium-binaries/releases/download/chromium/${PDFIUM_VERSION}/pdfium-windows-${ARCH}.zip")
 #endif()
 
-set(PDFIUM_URL "https://dro-framework.dromedian.it/customers/concilium/latest-pdfium-win-x64.tgz")
+set(PDFIUM_URL "https://dro-framework.concilium.live/latest-pdfium-win-x64.tgz")
 
 # Download pdfium
 include(../windows/DownloadProject.cmake)
