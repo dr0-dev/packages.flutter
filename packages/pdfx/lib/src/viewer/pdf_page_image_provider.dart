@@ -19,7 +19,7 @@ class PdfPageImageProvider extends ImageProvider<PdfPageImageProvider> {
   final double scale;
 
   @override
-  ImageStreamCompleter load(PdfPageImageProvider key, DecoderCallback decode) =>
+  ImageStreamCompleter load(PdfPageImageProvider key, var decode) =>
       MultiFrameImageStreamCompleter(
         codec: _loadAsync(key, decode),
         scale: key.scale,
@@ -33,7 +33,7 @@ class PdfPageImageProvider extends ImageProvider<PdfPageImageProvider> {
       SynchronousFuture<PdfPageImageProvider>(this);
 
   Future<ui.Codec> _loadAsync(
-      PdfPageImageProvider key, DecoderCallback decode) async {
+      PdfPageImageProvider key, var decode) async {
     assert(key == this);
 
     final loadedPdfPageImage = await pdfPageImage;
